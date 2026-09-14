@@ -8,25 +8,20 @@ import java.util.List;
 import com.database.Guest;
 import com.database.GuestDAO;
 
-public class GuestGUI {
+public class GuestPanel {
 
-    private JFrame frame;
+    private JPanel panel;
     private JTextField idField, nameField, emailField, phoneField;
     private JTable guestTable;
     private GuestDAO guestDAO = new GuestDAO();
     private DefaultTableModel tableModel;
 
-    public GuestGUI() {
-        frame = new JFrame("Guest Management");
-        frame.setSize(800, 600);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
+    public GuestPanel() {
+        panel = new JPanel(new BorderLayout());
 
-        // Top Panel with form and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Guest Details"));
 
-        // Form panel for labels and fields (4 rows, 2 columns)
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         formPanel.add(new JLabel("Guest ID:"));
         idField = new JTextField();
@@ -44,36 +39,39 @@ public class GuestGUI {
         phoneField = new JTextField();
         formPanel.add(phoneField);
 
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton addBtn = new JButton("Add Guest");
         JButton updateBtn = new JButton("Update Guest");
         JButton deleteBtn = new JButton("Delete Guest");
+        JButton backBtn = new JButton("Back to Menu");
         buttonPanel.add(addBtn);
         buttonPanel.add(updateBtn);
         buttonPanel.add(deleteBtn);
+        buttonPanel.add(backBtn);
 
-        // Assemble topPanel
         topPanel.add(formPanel, BorderLayout.CENTER);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Center Panel for table
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Phone"}, 0);
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Phone"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         guestTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(guestTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Guest List"));
 
-        // Add panels to frame
-        frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Load table data
         loadTableData();
 
-        // Event handling
         addBtn.addActionListener(e -> addGuest());
         updateBtn.addActionListener(e -> updateGuest());
         deleteBtn.addActionListener(e -> deleteGuest());
+        backBtn.addActionListener(e -> MainGUI.showCard("menu"));
+
         guestTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = guestTable.getSelectedRow();
@@ -85,8 +83,10 @@ public class GuestGUI {
                 }
             }
         });
+    }
 
-        frame.setVisible(true);
+    public JPanel getPanel() {
+        return panel;
     }
 
     private void loadTableData() {
@@ -101,14 +101,14 @@ public class GuestGUI {
         try {
             Guest g = new Guest(0, nameField.getText(), emailField.getText(), phoneField.getText());
             if (guestDAO.addGuest(g)) {
-                JOptionPane.showMessageDialog(frame, "Guest added successfully!");
+                JOptionPane.showMessageDialog(panel, "Guest added successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error adding guest.");
+                JOptionPane.showMessageDialog(panel, "Error adding guest.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input.");
+            JOptionPane.showMessageDialog(panel, "Invalid input.");
         }
     }
 
@@ -116,28 +116,28 @@ public class GuestGUI {
         try {
             Guest g = new Guest(Integer.parseInt(idField.getText()), nameField.getText(), emailField.getText(), phoneField.getText());
             if (guestDAO.updateGuest(g)) {
-                JOptionPane.showMessageDialog(frame, "Guest updated successfully!");
+                JOptionPane.showMessageDialog(panel, "Guest updated successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error updating guest.");
+                JOptionPane.showMessageDialog(panel, "Error updating guest.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input.");
+            JOptionPane.showMessageDialog(panel, "Invalid input.");
         }
     }
 
     private void deleteGuest() {
         try {
             if (guestDAO.deleteGuest(Integer.parseInt(idField.getText()))) {
-                JOptionPane.showMessageDialog(frame, "Guest deleted successfully!");
+                JOptionPane.showMessageDialog(panel, "Guest deleted successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error deleting guest.");
+                JOptionPane.showMessageDialog(panel, "Error deleting guest.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid Guest ID.");
+            JOptionPane.showMessageDialog(panel, "Invalid Guest ID.");
         }
     }
 
@@ -146,9 +146,5 @@ public class GuestGUI {
         nameField.setText("");
         emailField.setText("");
         phoneField.setText("");
-    }
-
-    public static void showGUI() {
-        new GuestGUI();
     }
 }

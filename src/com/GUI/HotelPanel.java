@@ -8,25 +8,20 @@ import javax.swing.table.DefaultTableModel;
 import com.database.Hotel;
 import com.database.HotelDAO;
 
-public class HotelGUI {
+public class HotelPanel {
 
-    private JFrame frame;
+    private JPanel panel;
     private JTextField idField, nameField, locationField, amenitiesField;
     private JTable hotelTable;
     private HotelDAO hotelDAO = new HotelDAO();
     private DefaultTableModel tableModel;
 
-    public HotelGUI() {
-        frame = new JFrame("Hotel Management");
-        frame.setSize(800, 600);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
+    public HotelPanel() {
+        panel = new JPanel(new BorderLayout());
 
-        // Top Panel with form and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Hotel Details"));
 
-        // Form panel for labels and fields (4 rows, 2 columns)
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         formPanel.add(new JLabel("Hotel ID:"));
         idField = new JTextField();
@@ -44,36 +39,39 @@ public class HotelGUI {
         amenitiesField = new JTextField();
         formPanel.add(amenitiesField);
 
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton addBtn = new JButton("Add Hotel");
         JButton updateBtn = new JButton("Update Hotel");
         JButton deleteBtn = new JButton("Delete Hotel");
+        JButton backBtn = new JButton("Back to Menu");
         buttonPanel.add(addBtn);
         buttonPanel.add(updateBtn);
         buttonPanel.add(deleteBtn);
+        buttonPanel.add(backBtn);
 
-        // Assemble topPanel
         topPanel.add(formPanel, BorderLayout.CENTER);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Center Panel for table
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Location", "Amenities"}, 0);
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Location", "Amenities"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         hotelTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(hotelTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Hotels List"));
 
-        // Add panels to frame
-        frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Load table data
         loadTableData();
 
-        // Event handling
         addBtn.addActionListener(e -> addHotel());
         updateBtn.addActionListener(e -> updateHotel());
         deleteBtn.addActionListener(e -> deleteHotel());
+        backBtn.addActionListener(e -> MainGUI.showCard("menu"));
+
         hotelTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = hotelTable.getSelectedRow();
@@ -85,12 +83,14 @@ public class HotelGUI {
                 }
             }
         });
+    }
 
-        frame.setVisible(true);
+    public JPanel getPanel() {
+        return panel;
     }
 
     private void loadTableData() {
-        tableModel.setRowCount(0); // Clear existing data
+        tableModel.setRowCount(0);
         List<Hotel> hotels = hotelDAO.getAllHotels();
         for (Hotel h : hotels) {
             tableModel.addRow(new Object[]{h.getHotelId(), h.getName(), h.getLocation(), h.getAmenities()});
@@ -100,11 +100,11 @@ public class HotelGUI {
     private void addHotel() {
         Hotel hotel = new Hotel(0, nameField.getText(), locationField.getText(), amenitiesField.getText());
         if (hotelDAO.addHotel(hotel)) {
-            JOptionPane.showMessageDialog(frame, "Hotel added successfully!");
+            JOptionPane.showMessageDialog(panel, "Hotel added successfully!");
             loadTableData();
             clearFields();
         } else {
-            JOptionPane.showMessageDialog(frame, "Error adding hotel.");
+            JOptionPane.showMessageDialog(panel, "Error adding hotel.");
         }
     }
 
@@ -113,14 +113,14 @@ public class HotelGUI {
             int id = Integer.parseInt(idField.getText());
             Hotel hotel = new Hotel(id, nameField.getText(), locationField.getText(), amenitiesField.getText());
             if (hotelDAO.updateHotel(hotel)) {
-                JOptionPane.showMessageDialog(frame, "Hotel updated successfully!");
+                JOptionPane.showMessageDialog(panel, "Hotel updated successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error updating hotel.");
+                JOptionPane.showMessageDialog(panel, "Error updating hotel.");
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Invalid Hotel ID.");
+            JOptionPane.showMessageDialog(panel, "Invalid Hotel ID.");
         }
     }
 
@@ -128,14 +128,14 @@ public class HotelGUI {
         try {
             int id = Integer.parseInt(idField.getText());
             if (hotelDAO.deleteHotel(id)) {
-                JOptionPane.showMessageDialog(frame, "Hotel deleted successfully!");
+                JOptionPane.showMessageDialog(panel, "Hotel deleted successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error deleting hotel.");
+                JOptionPane.showMessageDialog(panel, "Error deleting hotel.");
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Invalid Hotel ID.");
+            JOptionPane.showMessageDialog(panel, "Invalid Hotel ID.");
         }
     }
 
@@ -144,9 +144,5 @@ public class HotelGUI {
         nameField.setText("");
         locationField.setText("");
         amenitiesField.setText("");
-    }
-
-    public static void showGUI() {
-        new HotelGUI();
     }
 }

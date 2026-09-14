@@ -8,25 +8,20 @@ import java.util.List;
 import com.database.Room;
 import com.database.RoomsDAO;
 
-public class RoomGUI {
+public class RoomPanel {
 
-    private JFrame frame;
+    private JPanel panel;
     private JTextField idField, hotelIdField, roomNumberField, typeField, priceField, statusField;
     private JTable roomTable;
     private RoomsDAO roomDAO = new RoomsDAO();
     private DefaultTableModel tableModel;
 
-    public RoomGUI() {
-        frame = new JFrame("Room Management");
-        frame.setSize(900, 600);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
+    public RoomPanel() {
+        panel = new JPanel(new BorderLayout());
 
-        // Top Panel with form and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Room Details"));
 
-        // Form panel (6 rows, 2 columns)
         JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         formPanel.add(new JLabel("Room ID:"));
         idField = new JTextField();
@@ -52,36 +47,39 @@ public class RoomGUI {
         statusField = new JTextField();
         formPanel.add(statusField);
 
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton addBtn = new JButton("Add Room");
         JButton updateBtn = new JButton("Update Room");
         JButton deleteBtn = new JButton("Delete Room");
+        JButton backBtn = new JButton("Back to Menu");
         buttonPanel.add(addBtn);
         buttonPanel.add(updateBtn);
         buttonPanel.add(deleteBtn);
+        buttonPanel.add(backBtn);
 
-        // Assemble topPanel
         topPanel.add(formPanel, BorderLayout.CENTER);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Table panel
-        tableModel = new DefaultTableModel(new Object[]{"ID","Hotel ID","Room Number","Type","Price","Status"},0);
+        tableModel = new DefaultTableModel(new Object[]{"ID","Hotel ID","Room Number","Type","Price","Status"},0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         roomTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(roomTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Rooms List"));
 
-        // Add panels to frame
-        frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Load table data
         loadTableData();
 
-        // Event handling
         addBtn.addActionListener(e -> addRoom());
         updateBtn.addActionListener(e -> updateRoom());
         deleteBtn.addActionListener(e -> deleteRoom());
+        backBtn.addActionListener(e -> MainGUI.showCard("menu"));
+
         roomTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = roomTable.getSelectedRow();
@@ -95,8 +93,10 @@ public class RoomGUI {
                 }
             }
         });
+    }
 
-        frame.setVisible(true);
+    public JPanel getPanel() {
+        return panel;
     }
 
     private void loadTableData() {
@@ -112,11 +112,11 @@ public class RoomGUI {
             Room r = new Room(0, Integer.parseInt(hotelIdField.getText()), roomNumberField.getText(),
                     typeField.getText(), Double.parseDouble(priceField.getText()), statusField.getText());
             if(roomDAO.addRoom(r)){
-                JOptionPane.showMessageDialog(frame,"Room added successfully!");
+                JOptionPane.showMessageDialog(panel,"Room added successfully!");
                 loadTableData();
                 clearFields();
-            } else JOptionPane.showMessageDialog(frame,"Error adding room.");
-        } catch(Exception e){ JOptionPane.showMessageDialog(frame,"Invalid input."); }
+            } else JOptionPane.showMessageDialog(panel,"Error adding room.");
+        } catch(Exception e){ JOptionPane.showMessageDialog(panel,"Invalid input."); }
     }
 
     private void updateRoom() {
@@ -124,23 +124,23 @@ public class RoomGUI {
             Room r = new Room(Integer.parseInt(idField.getText()), Integer.parseInt(hotelIdField.getText()), roomNumberField.getText(),
                     typeField.getText(), Double.parseDouble(priceField.getText()), statusField.getText());
             if(roomDAO.updateRoom(r)){
-                JOptionPane.showMessageDialog(frame,"Room updated successfully!");
+                JOptionPane.showMessageDialog(panel,"Room updated successfully!");
                 loadTableData();
                 clearFields();
-            } else JOptionPane.showMessageDialog(frame,"Error updating room.");
-        } catch(Exception e){ JOptionPane.showMessageDialog(frame,"Invalid input."); }
+            } else JOptionPane.showMessageDialog(panel,"Error updating room.");
+        } catch(Exception e){ JOptionPane.showMessageDialog(panel,"Invalid input."); }
     }
 
     private void deleteRoom() {
         try{
             if(roomDAO.deleteRoom(Integer.parseInt(idField.getText()))){
-                JOptionPane.showMessageDialog(frame,"Room deleted successfully!");
+                JOptionPane.showMessageDialog(panel,"Room deleted successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame,"Error deleting room.");
+                JOptionPane.showMessageDialog(panel,"Error deleting room.");
             }
-        } catch(Exception e){ JOptionPane.showMessageDialog(frame,"Invalid Room ID."); }
+        } catch(Exception e){ JOptionPane.showMessageDialog(panel,"Invalid Room ID."); }
     }
 
     private void clearFields(){
@@ -150,9 +150,5 @@ public class RoomGUI {
         typeField.setText("");
         priceField.setText("");
         statusField.setText("");
-    }
-
-    public static void showGUI(){
-        new RoomGUI();
     }
 }

@@ -9,25 +9,20 @@ import java.util.List;
 import com.database.Reservation;
 import com.database.ReservationDAO;
 
-public class ReservationGUI {
+public class ReservationPanel {
 
-    private JFrame frame;
+    private JPanel panel;
     private JTextField idField, guestIdField, roomIdField, checkInField, checkOutField, costField;
     private JTable reservationTable;
     private ReservationDAO reservationDAO = new ReservationDAO();
     private DefaultTableModel tableModel;
 
-    public ReservationGUI() {
-        frame = new JFrame("Reservation Management");
-        frame.setSize(900, 600);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
+    public ReservationPanel() {
+        panel = new JPanel(new BorderLayout());
 
-        // Top Panel with form and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Reservation Details"));
 
-        // Form panel for labels and fields (6 rows, 2 columns)
         JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         formPanel.add(new JLabel("Reservation ID:"));
         idField = new JTextField();
@@ -53,36 +48,39 @@ public class ReservationGUI {
         costField = new JTextField();
         formPanel.add(costField);
 
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton addBtn = new JButton("Add Reservation");
         JButton updateBtn = new JButton("Update Reservation");
         JButton deleteBtn = new JButton("Delete Reservation");
+        JButton backBtn = new JButton("Back to Menu");
         buttonPanel.add(addBtn);
         buttonPanel.add(updateBtn);
         buttonPanel.add(deleteBtn);
+        buttonPanel.add(backBtn);
 
-        // Assemble topPanel
         topPanel.add(formPanel, BorderLayout.CENTER);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Center Panel for table
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Guest ID", "Room ID", "Check-In", "Check-Out", "Total Cost"}, 0);
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Guest ID", "Room ID", "Check-In", "Check-Out", "Total Cost"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         reservationTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(reservationTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Reservations List"));
 
-        // Add panels to frame
-        frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Load table data
         loadTableData();
 
-        // Event handling
         addBtn.addActionListener(e -> addReservation());
         updateBtn.addActionListener(e -> updateReservation());
         deleteBtn.addActionListener(e -> deleteReservation());
+        backBtn.addActionListener(e -> MainGUI.showCard("menu"));
+
         reservationTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = reservationTable.getSelectedRow();
@@ -96,8 +94,10 @@ public class ReservationGUI {
                 }
             }
         });
+    }
 
-        frame.setVisible(true);
+    public JPanel getPanel() {
+        return panel;
     }
 
     private void loadTableData() {
@@ -113,14 +113,14 @@ public class ReservationGUI {
             Reservation r = new Reservation(0, Integer.parseInt(guestIdField.getText()), Integer.parseInt(roomIdField.getText()),
                     LocalDate.parse(checkInField.getText()), LocalDate.parse(checkOutField.getText()), Double.parseDouble(costField.getText()));
             if (reservationDAO.addReservation(r)) {
-                JOptionPane.showMessageDialog(frame, "Reservation added successfully!");
+                JOptionPane.showMessageDialog(panel, "Reservation added successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error adding reservation.");
+                JOptionPane.showMessageDialog(panel, "Error adding reservation.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input.");
+            JOptionPane.showMessageDialog(panel, "Invalid input.");
         }
     }
 
@@ -129,28 +129,28 @@ public class ReservationGUI {
             Reservation r = new Reservation(Integer.parseInt(idField.getText()), Integer.parseInt(guestIdField.getText()), Integer.parseInt(roomIdField.getText()),
                     LocalDate.parse(checkInField.getText()), LocalDate.parse(checkOutField.getText()), Double.parseDouble(costField.getText()));
             if (reservationDAO.updateReservation(r)) {
-                JOptionPane.showMessageDialog(frame, "Reservation updated successfully!");
+                JOptionPane.showMessageDialog(panel, "Reservation updated successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error updating reservation.");
+                JOptionPane.showMessageDialog(panel, "Error updating reservation.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input.");
+            JOptionPane.showMessageDialog(panel, "Invalid input.");
         }
     }
 
     private void deleteReservation() {
         try {
             if (reservationDAO.deleteReservation(Integer.parseInt(idField.getText()))) {
-                JOptionPane.showMessageDialog(frame, "Reservation deleted successfully!");
+                JOptionPane.showMessageDialog(panel, "Reservation deleted successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(frame, "Error deleting reservation.");
+                JOptionPane.showMessageDialog(panel, "Error deleting reservation.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Invalid Reservation ID.");
+            JOptionPane.showMessageDialog(panel, "Invalid Reservation ID.");
         }
     }
 
@@ -161,9 +161,5 @@ public class ReservationGUI {
         checkInField.setText("");
         checkOutField.setText("");
         costField.setText("");
-    }
-
-    public static void showGUI() {
-        new ReservationGUI();
     }
 }

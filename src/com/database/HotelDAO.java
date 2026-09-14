@@ -1,72 +1,68 @@
 package com.database;
 
-import java.sql.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/* HotelDAO */
 public class HotelDAO {
+
+    private MongoCollection<Document> getCollection() {
+        return MongoConnectionManager.getDatabase().getCollection("hotels");
+    }
+
     public boolean addHotel(Hotel hotel) {
-        String sql = "INSERT INTO Hotel (name, location, amenities) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, hotel.getName());
-            ps.setString(2, hotel.getLocation());
-            ps.setString(3, hotel.getAmenities());
-            int affected = ps.executeUpdate();
-            if (affected == 0) return false;
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) hotel.setHotelId(rs.getInt(1));
-            }
+        try {
+            int newId = Counters.getNextSequence("hotelId");
+            hotel.setHotelId(newId);
+            getCollection().insertOne(hotel.toDocument());
             return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public Hotel getHotelById(int id) {
-        String sql = "SELECT * FROM Hotel WHERE hotel_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new Hotel(rs.getInt("hotel_id"), rs.getString("name"), rs.getString("location"), rs.getString("amenities"));
-                }
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return null;
+        Document doc = getCollection().find(Filters.eq("_id", id)).first();
+        return doc != null ? Hotel.fromDocument(doc) : null;
     }
 
     public boolean updateHotel(Hotel hotel) {
-        String sql = "UPDATE Hotel SET name = ?, location = ?, amenities = ? WHERE hotel_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, hotel.getName());
-            ps.setString(2, hotel.getLocation());
-            ps.setString(3, hotel.getAmenities());
-            ps.setInt(4, hotel.getHotelId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        try {
+            var result = getCollection().updateOne(
+                    Filters.eq("_id", hotel.getHotelId()),
+                    Updates.combine(
+                            Updates.set("name", hotel.getName()),
+                            Updates.set("location", hotel.getLocation()),
+                            Updates.set("amenities", hotel.getAmenities())
+                    )
+            );
+            return result.getModifiedCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean deleteHotel(int id) {
-        String sql = "DELETE FROM Hotel WHERE hotel_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        try {
+            var result = getCollection().deleteOne(Filters.eq("_id", id));
+            return result.getDeletedCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public List<Hotel> getAllHotels() {
         List<Hotel> list = new ArrayList<>();
-        String sql = "SELECT * FROM Hotel";
-        try (Connection conn = DatabaseConnector.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                list.add(new Hotel(rs.getInt("hotel_id"), rs.getString("name"), rs.getString("location"), rs.getString("amenities")));
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
+        for (Document doc : getCollection().find()) {
+            list.add(Hotel.fromDocument(doc));
+        }
         return list;
     }
 }

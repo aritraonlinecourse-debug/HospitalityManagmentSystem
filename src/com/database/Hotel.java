@@ -1,5 +1,7 @@
 package com.database;
 
+import org.bson.Document;
+
 public class Hotel {
     private int hotelId;
     private String name;
@@ -16,36 +18,29 @@ public class Hotel {
         this.amenities = amenities;
     }
 
-    public int getHotelId() {
-        return hotelId;
+    public int getHotelId() { return hotelId; }
+    public void setHotelId(int hotelId) { this.hotelId = hotelId; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public String getAmenities() { return amenities; }
+    public void setAmenities(String amenities) { this.amenities = amenities; }
+
+    public Document toDocument() {
+        return new Document("_id", hotelId)
+                .append("name", name)
+                .append("location", location)
+                .append("amenities", amenities);
     }
 
-    public void setHotelId(int hotelId) {
-        this.hotelId = hotelId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public String getAmenities() {
-        return amenities;
-    }
-
-    public void setAmenities(String amenities) {
-        this.amenities = amenities;
+    public static Hotel fromDocument(Document doc) {
+        Hotel h = new Hotel();
+        h.setHotelId(doc.getInteger("_id"));
+        h.setName(doc.getString("name"));
+        h.setLocation(doc.getString("location"));
+        h.setAmenities(doc.getString("amenities"));
+        return h;
     }
 
     @Override

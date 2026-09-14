@@ -1,72 +1,68 @@
 package com.database;
 
-import java.sql.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/* GuestDAO */
 public class GuestDAO {
+
+    private MongoCollection<Document> getCollection() {
+        return MongoConnectionManager.getDatabase().getCollection("guests");
+    }
+
     public boolean addGuest(Guest guest) {
-        String sql = "INSERT INTO Guest (name, email, phone) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, guest.getName());
-            ps.setString(2, guest.getEmail());
-            ps.setString(3, guest.getPhone());
-            int affected = ps.executeUpdate();
-            if (affected == 0) return false;
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) guest.setGuestId(rs.getInt(1));
-            }
+        try {
+            int newId = Counters.getNextSequence("guestId");
+            guest.setGuestId(newId);
+            getCollection().insertOne(guest.toDocument());
             return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public Guest getGuestById(int id) {
-        String sql = "SELECT * FROM Guest WHERE guest_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new Guest(rs.getInt("guest_id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"));
-                }
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return null;
+        Document doc = getCollection().find(Filters.eq("_id", id)).first();
+        return doc != null ? Guest.fromDocument(doc) : null;
     }
 
     public boolean updateGuest(Guest guest) {
-        String sql = "UPDATE Guest SET name = ?, email = ?, phone = ? WHERE guest_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, guest.getName());
-            ps.setString(2, guest.getEmail());
-            ps.setString(3, guest.getPhone());
-            ps.setInt(4, guest.getGuestId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        try {
+            var result = getCollection().updateOne(
+                    Filters.eq("_id", guest.getGuestId()),
+                    Updates.combine(
+                            Updates.set("name", guest.getName()),
+                            Updates.set("email", guest.getEmail()),
+                            Updates.set("phone", guest.getPhone())
+                    )
+            );
+            return result.getModifiedCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean deleteGuest(int id) {
-        String sql = "DELETE FROM Guest WHERE guest_id = ?";
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        try {
+            var result = getCollection().deleteOne(Filters.eq("_id", id));
+            return result.getDeletedCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public List<Guest> getAllGuests() {
         List<Guest> list = new ArrayList<>();
-        String sql = "SELECT * FROM Guest";
-        try (Connection conn = DatabaseConnector.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                list.add(new Guest(rs.getInt("guest_id"), rs.getString("name"), rs.getString("email"), rs.getString("phone")));
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
+        for (Document doc : getCollection().find()) {
+            list.add(Guest.fromDocument(doc));
+        }
         return list;
     }
 }
