@@ -23,14 +23,7 @@ public class ReservationPanel {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Reservation Details"));
 
-        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        formPanel.add(new JLabel("Reservation ID:"));
-        idField = new JTextField();
-        formPanel.add(idField);
-
-        formPanel.add(new JLabel("Guest ID:"));
-        guestIdField = new JTextField();
-        formPanel.add(guestIdField);
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
 
         formPanel.add(new JLabel("Room ID:"));
         roomIdField = new JTextField();
@@ -47,6 +40,9 @@ public class ReservationPanel {
         formPanel.add(new JLabel("Total Cost:"));
         costField = new JTextField();
         formPanel.add(costField);
+
+        idField = new JTextField();       // hidden — reservation ID, auto-filled on row click
+        guestIdField = new JTextField();  // hidden — guest ID, auto-generated on add, auto-filled on row click
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         JButton addBtn = new JButton("Add Reservation");
@@ -110,10 +106,13 @@ public class ReservationPanel {
 
     private void addReservation() {
         try {
-            Reservation r = new Reservation(0, Integer.parseInt(guestIdField.getText()), Integer.parseInt(roomIdField.getText()),
+            int generatedGuestId = com.database.Counters.getNextSequence("guestId");
+
+            Reservation r = new Reservation(0, generatedGuestId, Integer.parseInt(roomIdField.getText()),
                     LocalDate.parse(checkInField.getText()), LocalDate.parse(checkOutField.getText()), Double.parseDouble(costField.getText()));
             if (reservationDAO.addReservation(r)) {
-                JOptionPane.showMessageDialog(panel, "Reservation added successfully!");
+                JOptionPane.showMessageDialog(panel, "Reservation added successfully! Guest ID: " + generatedGuestId
+                        + "\nUse this ID in Add Guest to attach guest details.");
                 loadTableData();
                 clearFields();
             } else {

@@ -8,7 +8,7 @@ public class DAOSmokeTest {
         ReservationDAO resDao = new ReservationDAO();
 
         // 1. Create hotel
-        Hotel h = new Hotel(0, "Test Hotel", "Test City", "Pool,Gym");
+        Hotel h = new Hotel(0, "Test Hotel", "Test City", "Pool,Gym", 60.0, 100.0, 150.0);
         hdao.addHotel(h);
         System.out.println("Added hotel id: " + h.getHotelId());
 

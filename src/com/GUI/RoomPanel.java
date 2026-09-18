@@ -22,10 +22,8 @@ public class RoomPanel {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createTitledBorder("Room Details"));
 
-        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        formPanel.add(new JLabel("Room ID:"));
-        idField = new JTextField();
-        formPanel.add(idField);
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        idField = new JTextField(); // kept internally, not shown — auto-filled when a row is clicked
 
         formPanel.add(new JLabel("Hotel ID:"));
         hotelIdField = new JTextField();

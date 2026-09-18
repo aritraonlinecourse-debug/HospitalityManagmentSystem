@@ -23,6 +23,7 @@ public class GuestPanel {
         topPanel.setBorder(BorderFactory.createTitledBorder("Guest Details"));
 
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+
         formPanel.add(new JLabel("Guest ID:"));
         idField = new JTextField();
         formPanel.add(idField);
@@ -99,16 +100,17 @@ public class GuestPanel {
 
     private void addGuest() {
         try {
-            Guest g = new Guest(0, nameField.getText(), emailField.getText(), phoneField.getText());
+            int id = Integer.parseInt(idField.getText());
+            Guest g = new Guest(id, nameField.getText(), emailField.getText(), phoneField.getText());
             if (guestDAO.addGuest(g)) {
                 JOptionPane.showMessageDialog(panel, "Guest added successfully!");
                 loadTableData();
                 clearFields();
             } else {
-                JOptionPane.showMessageDialog(panel, "Error adding guest.");
+                JOptionPane.showMessageDialog(panel, "Error adding guest. This Guest ID may already exist.");
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(panel, "Invalid input.");
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(panel, "Guest ID must be a number.");
         }
     }
 

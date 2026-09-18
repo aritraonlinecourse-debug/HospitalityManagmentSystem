@@ -2,7 +2,6 @@ package com.GUI;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class MainGUI {
 
@@ -12,13 +11,12 @@ public class MainGUI {
 
     public static void main(String[] args) {
         frame = new JFrame("Hospitality Management System");
-        frame.setSize(900, 650);
+        frame.setSize(950, 650);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        // Menu panel
         JPanel menuPanel = new JPanel(new GridLayout(5, 1, 10, 10));
         JButton hotelBtn = new JButton("Add Hotels");
         JButton roomBtn = new JButton("Add Rooms");
@@ -30,7 +28,7 @@ public class MainGUI {
         roomBtn.addActionListener(e -> showCard("room"));
         guestBtn.addActionListener(e -> showCard("guest"));
         reservationBtn.addActionListener(e -> showCard("reservation"));
-        retrieveBtn.addActionListener(e -> showCard("reservation")); // same view as before
+        retrieveBtn.addActionListener(e -> showCard("retrieve"));
 
         menuPanel.add(hotelBtn);
         menuPanel.add(roomBtn);
@@ -43,6 +41,7 @@ public class MainGUI {
         cardPanel.add(new RoomPanel().getPanel(), "room");
         cardPanel.add(new GuestPanel().getPanel(), "guest");
         cardPanel.add(new ReservationPanel().getPanel(), "reservation");
+        cardPanel.add(new RetrieveDataPanel().getPanel(), "retrieve");
 
         frame.add(cardPanel);
         cardLayout.show(cardPanel, "menu");

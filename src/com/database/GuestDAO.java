@@ -16,8 +16,6 @@ public class GuestDAO {
 
     public boolean addGuest(Guest guest) {
         try {
-            int newId = Counters.getNextSequence("guestId");
-            guest.setGuestId(newId);
             getCollection().insertOne(guest.toDocument());
             return true;
         } catch (Exception e) {
@@ -25,7 +23,6 @@ public class GuestDAO {
             return false;
         }
     }
-
     public Guest getGuestById(int id) {
         Document doc = getCollection().find(Filters.eq("_id", id)).first();
         return doc != null ? Guest.fromDocument(doc) : null;

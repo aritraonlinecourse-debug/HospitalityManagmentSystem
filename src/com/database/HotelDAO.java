@@ -38,7 +38,10 @@ public class HotelDAO {
                     Updates.combine(
                             Updates.set("name", hotel.getName()),
                             Updates.set("location", hotel.getLocation()),
-                            Updates.set("amenities", hotel.getAmenities())
+                            Updates.set("amenities", hotel.getAmenities()),
+                            Updates.set("singleRoomPrice", hotel.getSingleRoomPrice()),
+                            Updates.set("coupleRoomPrice", hotel.getCoupleRoomPrice()),
+                            Updates.set("familyRoomPrice", hotel.getFamilyRoomPrice())
                     )
             );
             return result.getModifiedCount() > 0;

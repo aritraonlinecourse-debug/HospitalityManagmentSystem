@@ -25,12 +25,15 @@ public class DatabaseSetup {
     private static void createHotelsCollection(MongoDatabase db) {
         Document schema = new Document("$jsonSchema", new Document()
                 .append("bsonType", "object")
-                .append("required", java.util.List.of("_id", "name", "location"))
+                .append("required", java.util.List.of("_id", "name", "location", "singleRoomPrice", "coupleRoomPrice", "familyRoomPrice"))
                 .append("properties", new Document()
                         .append("_id", new Document("bsonType", "int"))
                         .append("name", new Document("bsonType", "string"))
                         .append("location", new Document("bsonType", "string"))
                         .append("amenities", new Document("bsonType", "string"))
+                        .append("singleRoomPrice", new Document("bsonType", java.util.List.of("double", "int")).append("minimum", 0))
+                        .append("coupleRoomPrice", new Document("bsonType", java.util.List.of("double", "int")).append("minimum", 0))
+                        .append("familyRoomPrice", new Document("bsonType", java.util.List.of("double", "int")).append("minimum", 0))
                 )
         );
         db.createCollection("hotels", new CreateCollectionOptions()
